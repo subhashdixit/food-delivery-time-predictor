@@ -1,0 +1,13 @@
+{
+  "old": "Food_Delivery_Time_Prediction_End_to_End_ML_Project",
+  "name": "food-delivery-time-predictor",
+  "title": "Delivery Time Lab",
+  "kind": "regression",
+  "target": "minutes",
+  "unit": "minutes",
+  "color": "#af5b26",
+  "intro": "Estimate historical delivery duration and explore how traffic, weather and distance relate to it.",
+  "limitations": "Great-circle distance is an approximation, not a routing ETA. The split separates delivery-person IDs. The dataset does not establish current conditions, restaurant preparation delays or real-time travel.",
+  "positiveLabel": "1",
+  "negativeLabel": "0"
+}

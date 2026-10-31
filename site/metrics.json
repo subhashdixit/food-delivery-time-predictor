@@ -1,0 +1,51 @@
+{
+  "version": "1.0.0",
+  "source_sha256": "e33e182ebb9c1d7e0f54c83c0cef6ddc5aa98d203e8888d33ab68cca3a079cba",
+  "source_path": "Data/finalTrain.csv",
+  "source_notice": "Original repository dataset; upstream annotation/collection provenance is not independently established.",
+  "original_rows": 45584,
+  "valid_target_rows": 45584,
+  "out_of_range_values_imputed": {
+    "Delivery_person_Age": 38,
+    "Delivery_person_Ratings": 53,
+    "distance_km": 431
+  },
+  "selected_model": "random_forest",
+  "kind": "regression",
+  "threshold": 0.5,
+  "split": {
+    "train": 27387,
+    "validation": 9006,
+    "test": 9191
+  },
+  "split_method": "GroupShuffleSplit; distinct courier IDs",
+  "validation_candidates": {
+    "linear": {
+      "rows": 9006,
+      "mae": 4.828124047341032,
+      "rmse": 6.0852425222926225,
+      "r2": 0.5810109292636565
+    },
+    "random_forest": {
+      "rows": 9006,
+      "mae": 3.5314181890780625,
+      "rmse": 4.486498254743253,
+      "r2": 0.772248147478458
+    }
+  },
+  "test": {
+    "rows": 9191,
+    "mae": 3.4685808011792743,
+    "rmse": 4.416302306753621,
+    "r2": 0.7828790882909153
+  },
+  "test_baseline": {
+    "rows": 9191,
+    "mae": 7.6580215546842405,
+    "rmse": 9.479485453398253,
+    "r2": -0.00035372664274868626
+  },
+  "training_only_preprocessing": true,
+  "sklearn_version": "1.6.1",
+  "artifact_sha256": "805734e363e31d76ce93d21ee9ed6bf2694c6dc158fcc6841185cdf1364068cc"
+}
