@@ -1,0 +1,13 @@
+{
+  "Delivery_person_Age": 30.0,
+  "Delivery_person_Ratings": 4.7,
+  "distance_km": 9.193,
+  "Weather_conditions": "Fog",
+  "Road_traffic_density": "Low",
+  "Vehicle_condition": 1,
+  "Type_of_order": "Snack",
+  "Type_of_vehicle": "motorcycle",
+  "multiple_deliveries": 1,
+  "Festival": "No",
+  "City": "Metropolitian"
+}
