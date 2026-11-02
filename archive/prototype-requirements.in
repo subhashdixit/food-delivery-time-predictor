@@ -1,0 +1,14 @@
+# Historical prototype dependencies: preserved for reference.
+# Supported maintained-release installation and exact locks: DEPENDENCIES.md.
+pandas
+numpy
+flask
+matplotlib
+seaborn
+folium
+scikit-learn
+plotly
+nbformat==4.2.0
+xgboost
+statsmodels
+-e . # It is used to install the requirments
