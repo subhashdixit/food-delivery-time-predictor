@@ -1,13 +1,32 @@
 # Delivery Time Lab
 
-**Reproducible versions:** [Dependency versions and exact setup](DEPENDENCIES.md).
+## 1. Project overview
 
+Delivery Time Lab: browser-side model inference, reproducible Python training, measured evaluation and GitHub Pages.
 
-**Application:** [Open Delivery Time Lab](https://subhashdixit.github.io/food-delivery-time-predictor/) · [Source](https://github.com/subhashdixit/food-delivery-time-predictor)
+[Live demo](https://subhashdixit.github.io/food-delivery-time-predictor/) · [Source repository](https://github.com/subhashdixit/food-delivery-time-predictor)
 
-Estimate historical delivery duration and explore how traffic, weather and distance relate to it. A complete **HTML/CSS/JavaScript application hosted on GitHub Pages**, with real offline Python training and a verified numeric model export. Inference runs in the visitor's browser, including CSV batches; there is no paid prediction API or model server.
+![Delivery Time Lab application screen](docs/images/application.png)
 
-## Problem and scope
+## 2. Motivation and problem statement
+
+### Objective
+
+Estimate historical delivery duration and study how distance and conditions relate to it.
+
+### Problem statement
+
+Unreliable coordinates and shared couriers can distort both model inputs and evaluation.
+
+### Motivation
+
+A grouped holdout and explicit feature contract make the retrospective estimate easier to interpret.
+
+## 3. Solution and scope
+
+**Inputs** — Distance and delivery conditions. **Outputs** — Estimated duration and held-out errors.
+
+### Problem and scope
 
 The raw coordinates are converted to great-circle distance, with zero/unsupported coordinates treated as missing. Distances above 300 km fall outside this study and are imputed rather than silently clipped. The form asks for kilometres directly. Courier IDs define separate split groups; they are not predictors. Feature availability at order time is not independently established, so this is a retrospective duration study rather than an operational booking-time ETA.
 
@@ -15,7 +34,9 @@ Great-circle distance is an approximation, not a routing ETA. The split separate
 
 The original repository was `Food_Delivery_Time_Prediction_End_to_End_ML_Project`. Existing notebooks, Python applications and model files are preserved for context; previous documentation is in `archive/`. The published `site/` uses the documented new model, not an implicitly trusted legacy pickle.
 
-## Use the app
+## 4. Quick start and usage
+
+### Use the app
 
 1. Open the GitHub Pages address linked from the repository About section after deployment.
 2. Review the synthetic starting profile. Defaults combine training medians and common categories; they do not identify a source record.
@@ -29,17 +50,9 @@ The original repository was `Food_Delivery_Time_Prediction_End_to_End_ML_Project
 
 **Privacy:** this app has no inference/upload endpoint, analytics script or browser-persistent input store. The static host receives normal asset requests/connection metadata. The local batch worker is terminated after completion or timeout. Reset restores the synthetic form; it does not promise forensic erasure of browser memory. Inputs are validated, not interpreted as executable code.
 
-## Data and feature contract
+## 5. High-level architecture
 
-- Source file: `Data/finalTrain.csv`.
-- Original source rows: **45,584**; valid-target rows used: **45,584**.
-- Source SHA-256: `e33e182ebb9c1d7e0f54c83c0cef6ddc5aa98d203e8888d33ab68cca3a079cba`.
-- Selected features: **11**. [Full names, units, categories and bounds](docs/feature-contract.md).
-- Attribution/provenance: Original repository dataset; upstream annotation/collection provenance is not independently established.
-
-Source numeric values outside the documented serving contract are counted and treated as missing in training, rather than being silently converted to valid measurements. The counts are recorded in [reports/metrics.json](reports/metrics.json). Unsupported targets are excluded. Categories are normalized using the documented source adapter.
-
-## Architecture: training and serving are separate
+### Architecture: training and serving are separate
 
 ```mermaid
 flowchart LR
@@ -59,7 +72,55 @@ GitHub Pages serves static files; it does not run Python. Training is an offline
 
 A hash catches accidental mismatch; it is not independent protection against a malicious change to both files. Source reviews, branch protection and CI provide complementary controls. The app never accepts uploaded model files or executes pickle objects.
 
-## Concepts and algorithms
+## 6. End-to-end request workflow
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant UI as Project interface
+    participant Engine as Browser engine
+    User->>UI: Provide Distance and delivery conditions
+    UI->>Engine: Process validated input
+    Engine->>Engine: Validate fields and score the portable regression model
+    Engine-->>UI: Estimated duration and held-out errors
+    UI-->>User: Present result or input feedback
+```
+
+## 7. Data sources, inputs, and outputs
+
+| Input | Processing | Output |
+| --- | --- | --- |
+| Distance and delivery conditions | Validate fields and score the portable regression model | Estimated duration and held-out errors |
+
+### Data and feature contract
+
+- Source file: `Data/finalTrain.csv`.
+- Original source rows: **45,584**; valid-target rows used: **45,584**.
+- Source SHA-256: `e33e182ebb9c1d7e0f54c83c0cef6ddc5aa98d203e8888d33ab68cca3a079cba`.
+- Selected features: **11**. [Full names, units, categories and bounds](docs/feature-contract.md).
+- Attribution/provenance: Original repository dataset; upstream annotation/collection provenance is not independently established.
+
+Source numeric values outside the documented serving contract are counted and treated as missing in training, rather than being silently converted to valid measurements. The counts are recorded in [reports/metrics.json](reports/metrics.json). Unsupported targets are excluded. Categories are normalized using the documented source adapter.
+
+## 8. Data flow and ETL pipeline
+
+```mermaid
+flowchart LR
+    A["Distance and delivery conditions"] --> B["Validate fields and score the portable regression model"] --> C["Estimated duration and held-out errors"]
+```
+
+```mermaid
+flowchart LR
+    A["Versioned dataset"] --> B["Validate and partition"] --> C["Fit candidate pipeline"] --> D["Evaluate and export"] --> E["Load serving artifact"]
+```
+
+## 9. Low-level design and interfaces
+
+Implementation entry points are [`site/index.html`](<site/index.html>), [`site/app.js`](<site/app.js>), [`site/model-engine.js`](<site/model-engine.js>), [`site/model-worker.js`](<site/model-worker.js>), [`site/charts.js`](<site/charts.js>), [`main.py`](<main.py>), [`scripts/train.py`](<scripts/train.py>).
+
+## 10. Concepts and algorithms
+
+### Concepts and algorithms
 
 **Missing values:** numeric medians are learned from training rows. A median is robust to outliers but ignores relationships between fields. Missing categories have an explicit token. All-empty profiles are rejected.
 
@@ -71,7 +132,18 @@ A hash catches accidental mismatch; it is not independent protection against a m
 
 The serving tree implementation reproduces scikit-learn's float32 split inputs with `Math.fround`. Linear inference uses ordinary double-precision arithmetic. Node parity fixtures compare JavaScript outputs with real held-out Python predictions to an absolute tolerance of `1e-7`. They are arithmetic checks, not extra accuracy measurements.
 
-## Split, model selection and results
+## 11. Technology choices and dependencies
+
+- **HTML, CSS, and JavaScript**. Serve a static browser interface with inspectable rendering and validation.
+- **Python**. Keep dataset preparation, fitting, and evaluation reproducible outside the serving path.
+- **Web Workers**. Keep batch inference off the interface thread.
+- **Portable model artifact**. Share versioned inference parameters between offline training and the browser scorer.
+
+[Dependency versions and runtime rationale](DEPENDENCIES.md)
+
+## 12. Training, inference, and evaluation
+
+### Split, model selection and results
 
 GroupShuffleSplit; distinct courier IDs. Fixed seeds **42 and 43** produce training / validation / test rows **27,387 / 9,006 / 9,191**. Grouping limits the documented form of leakage; this is not time-separated or externally validated deployment performance.
 
@@ -96,23 +168,7 @@ Errors use **minutes**. The mean-prediction baseline is fitted on training label
 
 Full measurements and integrity metadata are in [reports/metrics.json](reports/metrics.json). No synthetic performance figures are used.
 
-## Run locally
-
-Use Node.js **22+** for JavaScript development/checks and Python **3.10 or 3.11** for training and the simple local web server.
-
-```bash
-git clone https://github.com/subhashdixit/food-delivery-time-predictor.git
-cd food-delivery-time-predictor
-npm ci
-npm test
-npm run lint
-npm run format
-python3 -m http.server 8000 --directory site
-```
-
-Open `http://127.0.0.1:8000`. Serve over HTTP rather than opening `index.html` with `file://`, because model fetching, modules and workers need an appropriate origin. Production uses HTTPS on Pages. No API key, Docker container or backend account is needed to use this browser app.
-
-## Reproduce training
+### Reproduce training
 
 ```bash
 python3 -m venv .venv
@@ -129,7 +185,46 @@ On Windows, activate `.venv\Scripts\activate` instead. Training reads the includ
 
 The two insurance apps deliberately share source/training design; their results must not be counted as independent experiments. Other legacy preprocessing/model objects are preserved but are not silently mixed with this release.
 
-## Project structure
+Validation code is available in [`tests/model.test.js`](<tests/model.test.js>).
+
+## 13. Limitations and data handling
+
+Use the project within the scope of its documented inputs, datasets, and evaluation.
+
+## 14. Installation and local setup
+
+### Run locally
+
+Use Node.js **22+** for JavaScript development/checks and Python **3.10 or 3.11** for training and the simple local web server.
+
+```bash
+git clone https://github.com/subhashdixit/food-delivery-time-predictor.git
+cd food-delivery-time-predictor
+npm ci
+npm test
+npm run lint
+npm run format
+python3 -m http.server 8000 --directory site
+```
+
+Open `http://127.0.0.1:8000`. Serve over HTTP rather than opening `index.html` with `file://`, because model fetching, modules and workers need an appropriate origin. Production uses HTTPS on Pages. No API key, Docker container or backend account is needed to use this browser app.
+
+### Local dependency installation
+
+`requirements.txt` lists the complete supported training environment with exact `package==version` pins, including transitive dependencies. Use Python 3.11.17 in a fresh virtual environment:
+
+```bash
+python3.11 -m venv .venv
+# Activate: source .venv/bin/activate (Windows: .venv\Scripts\activate)
+python -m pip install -r requirements.txt
+python -m pip check
+```
+
+For hash-verified installation and separate development environments, follow [DEPENDENCIES.md](DEPENDENCIES.md). Original prototype requirements are preserved at `archive/prototype-requirements.in` where present; they are not the supported install command.
+
+## 15. Repository structure
+
+### Project structure
 
 ```text
 site/index.html          accessible HTML interface
@@ -149,7 +244,9 @@ archive/                 preserved previous documentation
 .github/workflows/       test and GitHub Pages release pipeline
 ```
 
-## CI/CD and GitHub Pages
+## 16. Deployment and operations
+
+### CI/CD and GitHub Pages
 
 ```mermaid
 flowchart LR
@@ -175,15 +272,6 @@ Enable **Settings → Pages → Source → GitHub Actions**. The workflow `.gith
 
 References: [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages), [scikit-learn evaluation](https://scikit-learn.org/stable/modules/model_evaluation.html), [common leakage pitfalls](https://scikit-learn.org/stable/common_pitfalls.html).
 
-## Local dependency installation
+## 17. License, credits, and support
 
-`requirements.txt` lists the complete supported training environment with exact `package==version` pins, including transitive dependencies. Use Python 3.11.17 in a fresh virtual environment:
-
-```bash
-python3.11 -m venv .venv
-# Activate: source .venv/bin/activate (Windows: .venv\Scripts\activate)
-python -m pip install -r requirements.txt
-python -m pip check
-```
-
-For hash-verified installation and separate development environments, follow [DEPENDENCIES.md](DEPENDENCIES.md). Original prototype requirements are preserved at `archive/prototype-requirements.in` where present; they are not the supported install command.
+[Repository code license](LICENSE). Report reproducible issues through [GitHub Issues](https://github.com/subhashdixit/food-delivery-time-predictor/issues).
